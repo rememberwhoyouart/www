@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>#RememberWhoYouArt</title>
+
+<!-- IBM Plex Mono + monospace fallback -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --flip-duration: 1s;    /* background animation length */
+  --grad-duration: .3s;     /* link fade duration        */
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  background-color: var(--start-bg);
+}
+
+a {
+  font-size: calc(69vw / 18);
+  display: inline-block;
+  white-space: nowrap;
+  color: var(--text-col);                /* invisible at start */
+  text-decoration: none;
+  transition: color var(--grad-duration) ease;
+}
+
+a:hover,
+a:focus-visible {
+  color: #0000FF;                        /* fade into blue   */
+}
+</style>
+
+<script>
+/* helpers */
+const hexToRgb = h => {
+  h = h.replace('#','');
+  if (h.length === 3) h = [...h].map(x => x+x).join('');
+  const v = parseInt(h,16);
+  return [v>>16 & 255, v>>8 & 255, v & 255];
+};
+const lerp = (a,b,t) => a + (b - a) * t;
+
+document.addEventListener('DOMContentLoaded', () => {
+  /* detect scheme & flip colors */
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const start = dark ? '#FFFFFF' : '#000000';  // flipped
+  const end   = dark ? '#000000' : '#FFFFFF';
+
+  const root = document.documentElement;
+  root.style.setProperty('--start-bg', start);
+  root.style.setProperty('--text-col', start);
+
+  /* build color stops for background */
+  const palette = [
+    '#FF0000','#FF8000','#FFFF00','#80FF00',
+    '#00FFFF','#0000FF','#FF00FF','#8000FF'
+  ];
+  const stops = [start, ...palette, end].map(hexToRgb);
+
+  /* animate background linearly over duration */
+  const dur = parseFloat(getComputedStyle(root).getPropertyValue('--flip-duration')) * 1000;
+  let t0 = null;
+  const step = ts => {
+    if (!t0) t0 = ts;
+    const p = Math.min((ts - t0)/dur, 1);          /* linear 0→1 */
+    const seg = p * (stops.length - 1);
+    const i = Math.floor(seg);
+    const f = seg - i;
+    const [r1,g1,b1] = stops[i];
+    const [r2,g2,b2] = stops[i+1] || stops[i];
+    const r = Math.round(lerp(r1, r2, f));
+    const g = Math.round(lerp(g1, g2, f));
+    const b = Math.round(lerp(b1, b2, f));
+    document.body.style.backgroundColor = `rgb(${r},${g},${b})`;
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+});
+</script>
+</head>
+
+<body>
+  <a href="https://Awaken.Channel" target="_blank" rel="noopener">
+    #RememberWhoYouArt
+  </a>
+</body>
+</html>
